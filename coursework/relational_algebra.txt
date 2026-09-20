@@ -1,0 +1,33 @@
+CAREER FAIR MANAGEMENT SYSTEM - 5 RELATIONAL ALGEBRA EXAMPLES
+
+Notation used:
+σ = selection
+π = projection
+⋈ = join
+γ = grouping/aggregation
+
+1. Find students who registered for Career Fair ID 1
+π Student_ID, Student_Name (
+    STUDENT ⋈ STUDENT.Student_ID = FAIR_REGISTRATION.Student_ID
+    (σ Fair_ID = 1 (FAIR_REGISTRATION))
+)
+
+2. Find approved companies participating in Career Fair ID 1
+π Company_ID, Company_Name (
+    COMPANY ⋈ COMPANY.Company_ID = COMPANY_PARTICIPATION.Company_ID
+    (σ Fair_ID = 1 ∧ Approval_Status = 'APPROVED' (COMPANY_PARTICIPATION))
+)
+
+3. Find all open job vacancies with their company names
+π Job_ID, Position_Title, Company_Name (
+    (σ Vacancy_Status = 'OPEN' (JOB_VACANCY))
+    ⋈ JOB_VACANCY.Company_ID = COMPANY.Company_ID COMPANY
+)
+
+4. Find applications that have been shortlisted
+π Application_ID, Student_ID, Job_ID (
+    σ Application_Status = 'SHORTLISTED' (APPLICATION)
+)
+
+5. Count the number of applications for each job
+γ Job_ID; COUNT(Application_ID)→Total_Applications (APPLICATION)

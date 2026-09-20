@@ -1,0 +1,24 @@
+<?php
+require_once dirname(__DIR__) . '/includes/auth.php';require_role('COMPANY_REP');$db=db();$rid=current_user()['related_id'];$st=$db->prepare('SELECT company_id FROM company_representative WHERE representative_id=?');$st->execute([$rid]);$cid=(int)$st->fetchColumn();
+if($_SERVER['REQUEST_METHOD']==='POST'){
+ verify_csrf();$action=post('action');
+ try{
+  if($action==='schedule'){
+   $aid=(int)$_POST['application_id'];
+   $check=$db->prepare("SELECT COUNT(*) FROM application a JOIN job_vacancy j ON j.job_id=a.job_id WHERE a.application_id=? AND j.company_id=? AND a.application_status='SHORTLISTED'");$check->execute([$aid,$cid]);
+   if(!(int)$check->fetchColumn())throw new RuntimeException('Only a SHORTLISTED application owned by your company can be interviewed.');
+   $db->prepare("INSERT INTO interview(interview_id,application_id,representative_id,interview_date,interview_time,location_or_link,interview_stage,interview_status,interview_result) VALUES(seq_interview.NEXTVAL,?,?,TO_DATE(?,'YYYY-MM-DD'),?,?,?,'SCHEDULED','PENDING')")->execute([$aid,$rid,post('interview_date'),post('interview_time'),post('location_or_link'),post('interview_stage')]);
+   flash('success','Interview scheduled in Oracle.');
+  }elseif($action==='update'){
+   $iid=(int)$_POST['interview_id'];$status=post('interview_status');$result=post('interview_result');
+   $q=$db->prepare('UPDATE interview SET interview_status=?, interview_result=? WHERE interview_id=? AND application_id IN (SELECT a.application_id FROM application a JOIN job_vacancy j ON j.job_id=a.job_id WHERE j.company_id=?)');
+   $q->execute([$status,$result,$iid,$cid]);flash('success','Interview updated in Oracle.');
+  }
+ }catch(Throwable $e){flash('error','Interview operation failed: '.oracle_error_message($e));}redirect('company/interviews.php');
+}
+$app=$db->prepare("SELECT a.application_id,s.student_name,j.position_title FROM application a JOIN student s ON s.student_id=a.student_id JOIN job_vacancy j ON j.job_id=a.job_id WHERE j.company_id=? AND a.application_status='SHORTLISTED' ORDER BY a.application_id DESC");$app->execute([$cid]);$apps=$app->fetchAll();
+$q=$db->prepare('SELECT i.*,s.student_name,j.position_title FROM interview i JOIN application a ON a.application_id=i.application_id JOIN student s ON s.student_id=a.student_id JOIN job_vacancy j ON j.job_id=a.job_id WHERE j.company_id=? ORDER BY i.interview_date,i.interview_time');$q->execute([$cid]);$rows=$q->fetchAll();
+$pageTitle='Interview Management';include dirname(__DIR__).'/includes/header.php';?>
+<div class="card form-card"><h2 style="margin-top:0">Schedule Interview</h2><form method="post"><input type="hidden" name="action" value="schedule"><?= csrf_field() ?><div class="form-grid"><div class="field"><label>Shortlisted Application</label><select name="application_id" required><?php foreach($apps as $a):?><option value="<?= e((string)$a['application_id']) ?>"><?= e($a['student_name'].' - '.$a['position_title']) ?></option><?php endforeach;?></select></div><div class="field"><label>Stage</label><select name="interview_stage"><option>Technical</option><option>HR</option><option>Final</option></select></div><div class="field"><label>Date</label><input type="date" name="interview_date" required></div><div class="field"><label>Time</label><input type="time" name="interview_time" required></div><div class="field full"><label>Location or Online Link</label><input name="location_or_link" required></div></div><button class="btn primary" style="margin-top:14px">Schedule Interview</button></form></div>
+<div class="section-title"><h2>Scheduled Interviews</h2></div><div class="table-wrap"><table><thead><tr><th>Student / Position</th><th>Schedule</th><th>Stage</th><th>Status / Result</th><th>Update</th></tr></thead><tbody><?php foreach($rows as $r):?><tr><td><strong><?= e($r['student_name']) ?></strong><br><?= e($r['position_title']) ?></td><td><?= e($r['interview_date']) ?> <?= e(substr((string)$r['interview_time'],0,5)) ?><br><span class="muted"><?= e($r['location_or_link']) ?></span></td><td><?= e($r['interview_stage']) ?></td><td><span class="badge <?= badge_class($r['interview_status']) ?>"><?= e($r['interview_status']) ?></span><br><?= e($r['interview_result']) ?></td><td><form method="post" class="actions"><?= csrf_field() ?><input type="hidden" name="action" value="update"><input type="hidden" name="interview_id" value="<?= e((string)$r['interview_id']) ?>"><select name="interview_status" style="width:auto"><option>SCHEDULED</option><option>COMPLETED</option><option>CANCELLED</option></select><select name="interview_result" style="width:auto"><option>PENDING</option><option>SELECTED</option><option>REJECTED</option><option>ON_HOLD</option></select><button class="btn small primary">Save</button></form></td></tr><?php endforeach;?></tbody></table></div>
+<?php include dirname(__DIR__).'/includes/footer.php'; ?>

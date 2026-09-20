@@ -1,0 +1,9 @@
+<?php
+// Example local database configuration template.
+// Copy this file to "config/database.local.php" and enter your real credentials.
+// Do NOT commit "config/database.local.php" to git.
+
+define('DB_USER', 'CF_OWNER');
+define('DB_PASS', 'YOUR_ORACLE_PASSWORD');
+define('DB_CONNECTION_STRING', '127.0.0.1:1521/XE');
+define('DB_CHARSET', 'AL32UTF8');

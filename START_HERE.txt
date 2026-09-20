@@ -1,0 +1,21 @@
+CAREER FAIR MANAGEMENT SYSTEM - FINAL PHP + ORACLE 10g XE
+
+1) Read docs/FINAL_SETUP_GUIDE_PHP_ORACLE10G.pdf
+2) Start Oracle 10g XE in the Windows VM and login as CF_OWNER.
+3) Verify the existing project schema with database/02_verify_project_schema.sql.
+4) Run database/01_web_support_setup.sql ONCE to add APP_USER login support.
+5) Install/start Apache + PHP and enable OCI8. MySQL is NOT used.
+6) Copy this folder to C:\xampp\htdocs\career_fair_management
+7) Copy config/database.local.php.example to config/database.local.php and set your real CF_OWNER password.
+8) Open http://localhost/career_fair_management/diagnostics.php
+9) Open http://localhost/career_fair_management/setup-check.php
+10) Login and perform the UI -> Oracle proof demo described in the PDF.
+
+Default demo accounts (created via database/01_web_support_setup.sql):
+Admin   : admin@example.com
+Student : student@example.com
+Company : company@example.com
+
+If old sample dates have passed, optionally run:
+database/03_optional_prepare_demo_dates.sql
+

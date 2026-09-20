@@ -1,0 +1,28 @@
+# Local Configuration & Credentials
+config/database.local.php
+.env
+.env.local
+.env.*.local
+
+# User Uploaded Files (Keep directory structure)
+uploads/resumes/*
+!uploads/resumes/.gitkeep
+
+# IDE & Editor Directories / Files
+.vscode/
+.idea/
+.gemini/
+*.sublime-project
+*.sublime-workspace
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and Temporary Files
+*.log
+error_log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
